@@ -12,6 +12,13 @@ import (
 
 func main() {
 	var empRepo = repository.NewInMem()
+	// config := Config{}
+	// var empRepo, err = repository.NewSQL(config)
+
+	// if err != nil {
+	// 	log.Fatal("Unable to connect to DB:", err)
+	// }
+
 	var empV1Svc = service.NewV1(empRepo)
 	var empHandler = empHTTP.NewHandler(empV1Svc)
 
