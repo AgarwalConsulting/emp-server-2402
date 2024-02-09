@@ -3,8 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -43,8 +47,22 @@ func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(newEmp)
 }
 
+func loggingMiddleware(next http.Handler) http.Handler {
+	router := func(w http.ResponseWriter, req *http.Request) {
+		begin := time.Now()
+
+		// if req.Header // if authenticated!
+		next.ServeHTTP(w, req)
+		// else
+		// w.WriteHeader(http.StatusUnauthorized)
+
+		log.Printf("%s %s took %s\n", req.Method, req.URL, time.Since(begin))
+	}
+
+	return http.HandlerFunc(router)
+}
+
 func main() {
-	// r := http.NewServeMux()
 	r := mux.NewRouter()
 
 	r.HandleFunc("/hello", func(w http.ResponseWriter, req *http.Request) {
@@ -56,5 +74,7 @@ func main() {
 	r.HandleFunc("/employees", EmployeeCreateHandler).Methods("POST")
 	r.HandleFunc("/employees", EmployeesIndexHandler).Methods("GET")
 
-	http.ListenAndServe(":8000", r)
+	log.Println("Starting server on port: 8000...")
+	// http.ListenAndServe(":8000", loggingMiddleware(r))
+	http.ListenAndServe(":8000", handlers.CombinedLoggingHandler(os.Stdout, r))
 }
