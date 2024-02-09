@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type Employee struct {
@@ -41,16 +43,9 @@ func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(newEmp)
 }
 
-func EmployeesHandler(w http.ResponseWriter, req *http.Request) {
-	if req.Method == "POST" {
-		EmployeeCreateHandler(w, req)
-	} else {
-		EmployeesIndexHandler(w, req)
-	}
-}
-
 func main() {
-	r := http.NewServeMux()
+	// r := http.NewServeMux()
+	r := mux.NewRouter()
 
 	r.HandleFunc("/hello", func(w http.ResponseWriter, req *http.Request) {
 		msg := "Hello, World!"
@@ -58,7 +53,8 @@ func main() {
 		fmt.Fprintln(w, msg)
 	})
 
-	r.HandleFunc("/employees", EmployeesHandler)
+	r.HandleFunc("/employees", EmployeeCreateHandler).Methods("POST")
+	r.HandleFunc("/employees", EmployeesIndexHandler).Methods("GET")
 
-	http.ListenAndServe("localhost:8000", r)
+	http.ListenAndServe(":8000", r)
 }
