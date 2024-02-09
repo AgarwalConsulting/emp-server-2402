@@ -7,14 +7,15 @@ import (
 
 type Handler struct {
 	v1 service.EmployeeService
-	r  *mux.Router
+	*mux.Router
+	// Router *mux.Router
 }
 
 func (h *Handler) SetupRoutes(r *mux.Router) {
 	r.HandleFunc("/v1/employees", h.CreateV1).Methods("POST")
 	r.HandleFunc("/v1/employees", h.IndexV1).Methods("GET")
 
-	h.r = r
+	h.Router = r
 }
 
 func NewHandler(v1 service.EmployeeService) Handler {
