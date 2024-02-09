@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,48 +10,10 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
+	empHTTP "algogrit.com/emp-server/employees/http"
 	"algogrit.com/emp-server/employees/repository"
 	"algogrit.com/emp-server/employees/service"
-	"algogrit.com/emp-server/entities"
 )
-
-var empRepo = repository.NewInMem()
-var empV1Svc = service.NewV1(empRepo)
-
-func EmployeesIndexHandler(w http.ResponseWriter, req *http.Request) {
-	employees, err := empV1Svc.Index()
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(employees)
-}
-
-func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
-	var newEmp entities.Employee
-	err := json.NewDecoder(req.Body).Decode(&newEmp)
-
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, err)
-		return
-	}
-
-	createdEmp, err := empV1Svc.Create(newEmp)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(createdEmp)
-}
 
 func loggingMiddleware(next http.Handler) http.Handler {
 	router := func(w http.ResponseWriter, req *http.Request) {
@@ -78,8 +39,11 @@ func main() {
 		fmt.Fprintln(w, msg)
 	})
 
-	r.HandleFunc("/employees", EmployeeCreateHandler).Methods("POST")
-	r.HandleFunc("/employees", EmployeesIndexHandler).Methods("GET")
+	var empRepo = repository.NewInMem()
+	var empV1Svc = service.NewV1(empRepo)
+	var empHandler = empHTTP.NewHandler(empV1Svc)
+
+	empHandler.SetupRoutes(r)
 
 	log.Println("Starting server on port: 8000...")
 	// http.ListenAndServe(":8000", loggingMiddleware(r))
