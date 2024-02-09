@@ -1,8 +1,9 @@
 package http
 
 import (
-	"algogrit.com/emp-server/employees/service"
 	"github.com/gorilla/mux"
+
+	"algogrit.com/emp-server/employees/service"
 )
 
 type Handler struct {
