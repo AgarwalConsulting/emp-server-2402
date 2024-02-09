@@ -43,3 +43,25 @@ func TestCreateV1(t *testing.T) {
 
 	assert.Equal(t, expectedEmployee, actualEmp)
 }
+
+func FuzzCreateV1(f *testing.F) {
+	f.Add(`{"special`)
+
+	f.Fuzz(func(t *testing.T, jsonBody string) {
+		ctrl := gomock.NewController(t)
+		mockSvc := service.NewMockEmployeeService(ctrl)
+
+		sut := empHTTP.NewHandler(mockSvc)
+
+		reqBody := strings.NewReader(jsonBody)
+
+		req := httptest.NewRequest("POST", "/v1/employees", reqBody)
+		respRec := httptest.NewRecorder()
+
+		sut.ServeHTTP(respRec, req)
+
+		resp := respRec.Result()
+
+		assert.NotEqual(t, http.StatusOK, resp.StatusCode)
+	})
+}
